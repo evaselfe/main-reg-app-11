@@ -194,7 +194,7 @@ const Index = () => {
             </div>
             <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300">
               <h3 className="text-xl font-semibold mb-3 text-yellow-200">Email</h3>
-              <p className="text-white/90">info@womenemployment.gov.in</p>
+              <p className="text-white/90">teamelifesociety@gmail.com</p>
             </div>
             <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300">
               <h3 className="text-xl font-semibold mb-3 text-yellow-200">Address</h3>
