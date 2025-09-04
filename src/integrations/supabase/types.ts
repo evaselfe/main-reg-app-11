@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
@@ -378,6 +378,45 @@ export type Database = {
         }
         Relationships: []
       }
+      questions: {
+        Row: {
+          correct_answer: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          question_text: string
+          updated_at: string | null
+        }
+        Insert: {
+          correct_answer: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          question_text: string
+          updated_at?: string | null
+        }
+        Update: {
+          correct_answer?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          option_a?: string
+          option_b?: string
+          option_c?: string
+          option_d?: string
+          question_text?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       registration_verifications: {
         Row: {
           created_at: string | null
@@ -500,6 +539,113 @@ export type Database = {
             columns: ["preference_category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shared_link_submissions: {
+        Row: {
+          created_at: string | null
+          id: string
+          registration_id: string
+          shared_link_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          registration_id: string
+          shared_link_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          registration_id?: string
+          shared_link_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_link_submissions_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "registrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shared_link_submissions_shared_link_id_fkey"
+            columns: ["shared_link_id"]
+            isOneToOne: false
+            referencedRelation: "shared_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shared_links: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          mobile_number: string
+          share_code: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          mobile_number: string
+          share_code: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          mobile_number?: string
+          share_code?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      submissions: {
+        Row: {
+          answers: Json | null
+          id: string
+          mobile_number: string
+          participant_name: string
+          reference_mobile_number: string | null
+          score: number
+          shared_link_id: string | null
+          submitted_at: string | null
+          total_questions: number
+        }
+        Insert: {
+          answers?: Json | null
+          id?: string
+          mobile_number: string
+          participant_name: string
+          reference_mobile_number?: string | null
+          score?: number
+          shared_link_id?: string | null
+          submitted_at?: string | null
+          total_questions: number
+        }
+        Update: {
+          answers?: Json | null
+          id?: string
+          mobile_number?: string
+          participant_name?: string
+          reference_mobile_number?: string | null
+          score?: number
+          shared_link_id?: string | null
+          submitted_at?: string | null
+          total_questions?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submissions_shared_link_id_fkey"
+            columns: ["shared_link_id"]
+            isOneToOne: false
+            referencedRelation: "shared_links"
             referencedColumns: ["id"]
           },
         ]
