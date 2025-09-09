@@ -9,18 +9,27 @@ import { toast } from 'sonner';
 
 const AdminLogin = () => {
   const [username, setUsername] = useState('');
+  const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState('');
   const { login } = useAdminAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = login(username, password);
-    if (success) {
-      toast.success('Login successful!');
-      navigate('/admin');
-    } else {
-      toast.error('Invalid username or password');
+    setLoading(true);
+    
+    try {
+      const success = await login(username, password);
+      if (success) {
+        toast.success('Login successful!');
+        navigate('/admin');
+      } else {
+        toast.error('Invalid username or password');
+      }
+    } catch (error) {
+      toast.error('Login failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -55,8 +64,8 @@ const AdminLogin = () => {
                 required
               />
             </div>
-            <Button type="submit" className="w-full">
-              Login
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Logging in...' : 'Login'}
             </Button>
           </form>
         </CardContent>
