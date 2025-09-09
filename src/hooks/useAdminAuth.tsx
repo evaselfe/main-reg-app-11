@@ -4,8 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 interface AdminAuthContextType {
   isAdminLoggedIn: boolean;
   currentAdminName: string | null;
+  currentAdminId: string | null;
+  userPermissions: string[];
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
+  hasPermission: (permissionName: string) => boolean;
 }
 
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
@@ -13,13 +16,42 @@ const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefin
 export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [currentAdminName, setCurrentAdminName] = useState<string | null>(null);
+  const [currentAdminId, setCurrentAdminId] = useState<string | null>(null);
+  const [userPermissions, setUserPermissions] = useState<string[]>([]);
+
+  const fetchUserPermissions = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('admin_user_permissions')
+        .select(`
+          admin_permissions!inner(name)
+        `)
+        .eq('admin_user_id', userId);
+
+      if (error) throw error;
+      
+      const permissions = (data || []).map(item => (item.admin_permissions as any).name);
+      setUserPermissions(permissions);
+      localStorage.setItem('adminPermissions', JSON.stringify(permissions));
+    } catch (error) {
+      console.error('Error fetching user permissions:', error);
+      setUserPermissions([]);
+    }
+  };
 
   useEffect(() => {
     const savedAuth = localStorage.getItem('adminAuth');
     const savedAdminName = localStorage.getItem('adminName');
-    if (savedAuth === 'true' && savedAdminName) {
+    const savedAdminId = localStorage.getItem('adminId');
+    const savedPermissions = localStorage.getItem('adminPermissions');
+    
+    if (savedAuth === 'true' && savedAdminName && savedAdminId) {
       setIsAdminLoggedIn(true);
       setCurrentAdminName(savedAdminName);
+      setCurrentAdminId(savedAdminId);
+      if (savedPermissions) {
+        setUserPermissions(JSON.parse(savedPermissions));
+      }
     }
   }, []);
 
@@ -51,8 +83,14 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
 
       setIsAdminLoggedIn(true);
       setCurrentAdminName(username);
+      setCurrentAdminId(adminUser.id);
       localStorage.setItem('adminAuth', 'true');
       localStorage.setItem('adminName', username);
+      localStorage.setItem('adminId', adminUser.id);
+      
+      // Fetch user permissions
+      await fetchUserPermissions(adminUser.id);
+      
       return true;
     } catch (error) {
       console.error('Login error:', error);
@@ -63,12 +101,28 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setIsAdminLoggedIn(false);
     setCurrentAdminName(null);
+    setCurrentAdminId(null);
+    setUserPermissions([]);
     localStorage.removeItem('adminAuth');
     localStorage.removeItem('adminName');
+    localStorage.removeItem('adminId');
+    localStorage.removeItem('adminPermissions');
+  };
+
+  const hasPermission = (permissionName: string): boolean => {
+    return userPermissions.includes(permissionName);
   };
 
   return (
-    <AdminAuthContext.Provider value={{ isAdminLoggedIn, currentAdminName, login, logout }}>
+    <AdminAuthContext.Provider value={{ 
+      isAdminLoggedIn, 
+      currentAdminName, 
+      currentAdminId, 
+      userPermissions, 
+      login, 
+      logout, 
+      hasPermission 
+    }}>
       {children}
     </AdminAuthContext.Provider>
   );

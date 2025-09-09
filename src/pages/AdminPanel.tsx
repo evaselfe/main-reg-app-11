@@ -15,7 +15,7 @@ import AdminUsersTab from '@/components/admin/AdminUsersTab';
 import NotificationBell from '@/components/admin/NotificationBell';
 
 const AdminPanel = () => {
-  const { isAdminLoggedIn, logout } = useAdminAuth();
+  const { isAdminLoggedIn, logout, hasPermission } = useAdminAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,6 +27,29 @@ const AdminPanel = () => {
   const handleLogout = () => {
     logout();
     navigate('/admin/login');
+  };
+
+  // Permission-based tab visibility
+  const canViewRegistrations = hasPermission('manage_registrations') || hasPermission('users_read');
+  const canViewCategories = hasPermission('manage_categories') || hasPermission('categories_read');
+  const canViewPanchayaths = hasPermission('panchayaths_read') || hasPermission('panchayaths_write');
+  const canViewAnnouncements = hasPermission('announcements_read') || hasPermission('announcements_write');
+  const canViewUtilities = hasPermission('manage_utilities') || hasPermission('utilities_read');
+  const canViewAccounts = hasPermission('accounts_read') || hasPermission('accounts_write');
+  const canViewReports = hasPermission('manage_reports') || hasPermission('reports_read');
+  const canViewAdminUsers = hasPermission('manage_users') || hasPermission('admin_users_read');
+
+  // Get the first available tab for default value
+  const getDefaultTab = () => {
+    if (canViewRegistrations) return 'registrations';
+    if (canViewCategories) return 'categories';
+    if (canViewPanchayaths) return 'panchayaths';
+    if (canViewAnnouncements) return 'announcements';
+    if (canViewUtilities) return 'utilities';
+    if (canViewAccounts) return 'accounts';
+    if (canViewReports) return 'reports';
+    if (canViewAdminUsers) return 'admin-users';
+    return 'registrations'; // fallback
   };
 
   if (!isAdminLoggedIn) {
@@ -47,67 +70,99 @@ const AdminPanel = () => {
           </div>
         </div>
         
-        <Tabs defaultValue="registrations" className="w-full">
+        <Tabs defaultValue={getDefaultTab()} className="w-full">
           <div className="overflow-x-auto">
-            <TabsList className="flex w-max sm:grid sm:w-full sm:grid-cols-4 lg:grid-cols-8 h-auto p-1">
-              <TabsTrigger value="registrations" className="whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3">
-                Registrations
-              </TabsTrigger>
-              <TabsTrigger value="categories" className="whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3">
-                Categories
-              </TabsTrigger>
-              <TabsTrigger value="panchayaths" className="whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3">
-                Panchayaths
-              </TabsTrigger>
-              <TabsTrigger value="announcements" className="whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3">
-                Announcements
-              </TabsTrigger>
-              <TabsTrigger value="utilities" className="whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3">
-                Utilities
-              </TabsTrigger>
-              <TabsTrigger value="accounts" className="whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3">
-                Accounts
-              </TabsTrigger>
-              <TabsTrigger value="reports" className="whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3">
-                Reports
-              </TabsTrigger>
-              <TabsTrigger value="admin-users" className="whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3">
-                Admin Users
-              </TabsTrigger>
+            <TabsList className="flex w-max sm:grid sm:w-full h-auto p-1" style={{ gridTemplateColumns: `repeat(${[canViewRegistrations, canViewCategories, canViewPanchayaths, canViewAnnouncements, canViewUtilities, canViewAccounts, canViewReports, canViewAdminUsers].filter(Boolean).length}, 1fr)` }}>
+              {canViewRegistrations && (
+                <TabsTrigger value="registrations" className="whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3">
+                  Registrations
+                </TabsTrigger>
+              )}
+              {canViewCategories && (
+                <TabsTrigger value="categories" className="whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3">
+                  Categories
+                </TabsTrigger>
+              )}
+              {canViewPanchayaths && (
+                <TabsTrigger value="panchayaths" className="whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3">
+                  Panchayaths
+                </TabsTrigger>
+              )}
+              {canViewAnnouncements && (
+                <TabsTrigger value="announcements" className="whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3">
+                  Announcements
+                </TabsTrigger>
+              )}
+              {canViewUtilities && (
+                <TabsTrigger value="utilities" className="whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3">
+                  Utilities
+                </TabsTrigger>
+              )}
+              {canViewAccounts && (
+                <TabsTrigger value="accounts" className="whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3">
+                  Accounts
+                </TabsTrigger>
+              )}
+              {canViewReports && (
+                <TabsTrigger value="reports" className="whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3">
+                  Reports
+                </TabsTrigger>
+              )}
+              {canViewAdminUsers && (
+                <TabsTrigger value="admin-users" className="whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3">
+                  Admin Users
+                </TabsTrigger>
+              )}
             </TabsList>
           </div>
           
-          <TabsContent value="registrations">
-            <RegistrationsTab />
-          </TabsContent>
+          {canViewRegistrations && (
+            <TabsContent value="registrations">
+              <RegistrationsTab />
+            </TabsContent>
+          )}
           
-          <TabsContent value="categories">
-            <CategoriesTab />
-          </TabsContent>
+          {canViewCategories && (
+            <TabsContent value="categories">
+              <CategoriesTab />
+            </TabsContent>
+          )}
           
-          <TabsContent value="panchayaths">
-            <PanchayathsTab />
-          </TabsContent>
+          {canViewPanchayaths && (
+            <TabsContent value="panchayaths">
+              <PanchayathsTab />
+            </TabsContent>
+          )}
           
-          <TabsContent value="announcements">
-            <AnnouncementsTab />
-          </TabsContent>
+          {canViewAnnouncements && (
+            <TabsContent value="announcements">
+              <AnnouncementsTab />
+            </TabsContent>
+          )}
           
-          <TabsContent value="utilities">
-            <UtilitiesTab />
-          </TabsContent>
+          {canViewUtilities && (
+            <TabsContent value="utilities">
+              <UtilitiesTab />
+            </TabsContent>
+          )}
           
-          <TabsContent value="accounts">
-            <AccountsTab />
-          </TabsContent>
+          {canViewAccounts && (
+            <TabsContent value="accounts">
+              <AccountsTab />
+            </TabsContent>
+          )}
           
-          <TabsContent value="reports">
-            <ReportsTab />
-          </TabsContent>
+          {canViewReports && (
+            <TabsContent value="reports">
+              <ReportsTab />
+            </TabsContent>
+          )}
           
-          <TabsContent value="admin-users">
-            <AdminUsersTab />
-          </TabsContent>
+          {canViewAdminUsers && (
+            <TabsContent value="admin-users">
+              <AdminUsersTab />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>
