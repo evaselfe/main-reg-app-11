@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
@@ -318,11 +319,12 @@ export default function AdminUsersTab() {
               Add Admin User
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-h-[90vh]">
             <DialogHeader>
               <DialogTitle>Add New Admin User</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
+            <ScrollArea className="max-h-[70vh] pr-4">
+              <div className="space-y-4">
               <div>
                 <Label htmlFor="username">Username *</Label>
                 <Input
@@ -399,12 +401,13 @@ export default function AdminUsersTab() {
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setShowAddDialog(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleAddUser}>Create User</Button>
               </div>
+            </ScrollArea>
+            <div className="flex justify-end space-x-2 pt-4 border-t">
+              <Button variant="outline" onClick={() => setShowAddDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAddUser}>Create User</Button>
             </div>
           </DialogContent>
         </Dialog>
