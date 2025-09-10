@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => ({
     host: "0.0.0.0",
     port: 8080,
     strictPort: true,
-    hmr: { host: 'f10c4ce1-e15b-442d-afe4-0d31f091693b.lovableproject.com', clientPort: 443, protocol: 'wss' },
+    hmr: { host: 'a62b9a89-a286-4353-8b8d-fcc614e1e7df.sandbox.lovable.dev', clientPort: 443, protocol: 'wss' },
   },
   plugins: [
     react(),
