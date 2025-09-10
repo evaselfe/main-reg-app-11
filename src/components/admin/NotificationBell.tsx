@@ -131,11 +131,6 @@ useEffect(() => {
   }
 }, [expiredRegistrations.length, expiringRegistrations.length, acknowledged]);
 
-  const handleNotificationClick = () => {
-    if (expiredRegistrations.length > 0 || expiringRegistrations.length > 0) {
-      setShowAlert(true);
-    }
-  };
 
   return (
     <>
@@ -146,7 +141,7 @@ useEffect(() => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleNotificationClick}
+              onClick={() => setShowAlert(true)}
               className="relative p-2"
               disabled={loading}
             >
@@ -167,7 +162,7 @@ useEffect(() => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleNotificationClick}
+              onClick={() => setShowAlert(true)}
               className="relative p-2"
               disabled={loading}
             >
@@ -182,12 +177,25 @@ useEffect(() => {
         )}
       </div>
 
-      <ExpiringRegistrationsAlert
-        open={showAlert}
-        onOpenChange={setShowAlert}
-        registrations={[...expiredRegistrations, ...expiringRegistrations]}
-        onGotIt={() => setAcknowledged(true)}
-      />
+      {/* Show expired registrations when bell is clicked */}
+      {expiredRegistrations.length > 0 && (
+        <ExpiringRegistrationsAlert
+          open={showAlert}
+          onOpenChange={setShowAlert}
+          registrations={expiredRegistrations}
+          onGotIt={() => setAcknowledged(true)}
+        />
+      )}
+
+      {/* Show expiring registrations when exclamation is clicked */}
+      {expiringRegistrations.length > 0 && expiredRegistrations.length === 0 && (
+        <ExpiringRegistrationsAlert
+          open={showAlert}
+          onOpenChange={setShowAlert}
+          registrations={expiringRegistrations}
+          onGotIt={() => setAcknowledged(true)}
+        />
+      )}
     </>
   );
 };
