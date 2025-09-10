@@ -191,6 +191,35 @@ const RegistrationsTab = () => {
     }
   };
 
+  const handleExportRegistrations = async () => {
+    try {
+      // Create CSV data with only requested fields
+      const headers = ['Name', 'Mobile Number', 'Panchayath', 'Category', 'Registered Date', 'Expiry Date'];
+      const csvData = [
+        headers.join(','),
+        ...filteredRegistrations.map(reg => [
+          `"${reg.full_name}"`,
+          reg.mobile_number,
+          `"${reg.panchayaths?.name || 'N/A'}"`,
+          `"${reg.categories?.name_english || 'N/A'}"`,
+          format(new Date(reg.created_at), 'dd/MM/yyyy'),
+          reg.expiry_date ? format(new Date(reg.expiry_date), 'dd/MM/yyyy') : 'N/A'
+        ].join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvData], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `registrations-export-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      toast.success('Registrations exported successfully');
+    } catch (error) {
+      toast.error('Error exporting registrations');
+    }
+  };
+
   const handleEditRegistration = (registration: Registration) => {
     setEditingRegistration(registration);
     setShowEditDialog(true);
@@ -353,7 +382,7 @@ const RegistrationsTab = () => {
               min="0"
             />
 
-            <Button variant="outline" className="text-xs">
+            <Button variant="outline" className="text-xs" onClick={handleExportRegistrations}>
               <FileDown className="w-3 h-3 mr-1" />
               <span className="hidden sm:inline">Export</span>
             </Button>
