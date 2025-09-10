@@ -2,18 +2,17 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Download, User, MapPin, Calendar, Phone, Hash } from 'lucide-react';
+import { FileText, Download, User, MapPin, Calendar, Phone } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface ExpiringRegistration {
   id: string;
   name: string;
   phone: string;
-  esep_id: string;
   category: string;
   location: string;
   created_at: string;
-  days_remaining: number;
+  expiry_date: string;
 }
 
 interface ExpiringRegistrationsAlertProps {
@@ -35,17 +34,16 @@ const ExpiringRegistrationsAlert = ({
     setIsExporting(true);
     try {
       // Create CSV data for Excel
-      const headers = ['Name', 'Phone', 'ESEP ID', 'Category', 'Location', 'Created Date', 'Days Remaining'];
+      const headers = ['Name', 'Mobile Number', 'Panchayath', 'Category', 'Created Date', 'Expiry Date'];
       const csvData = [
         headers.join(','),
         ...registrations.map(reg => [
           reg.name,
           reg.phone,
-          reg.esep_id,
-          reg.category,
           reg.location,
+          reg.category,
           format(new Date(reg.created_at), 'dd/MM/yyyy'),
-          reg.days_remaining
+          format(new Date(reg.expiry_date), 'dd/MM/yyyy')
         ].join(','))
       ].join('\n');
 
@@ -84,12 +82,11 @@ const ExpiringRegistrationsAlert = ({
             ${registrations.map(reg => `
               <div class="registration">
                 <div class="header">${reg.name}</div>
-                <p><strong>Phone:</strong> ${reg.phone}</p>
-                <p><strong>ESEP ID:</strong> ${reg.esep_id}</p>
+                <p><strong>Mobile Number:</strong> ${reg.phone}</p>
+                <p><strong>Panchayath:</strong> ${reg.location}</p>
                 <p><strong>Category:</strong> ${reg.category}</p>
-                <p><strong>Location:</strong> ${reg.location}</p>
                 <p><strong>Created:</strong> ${format(new Date(reg.created_at), 'dd/MM/yyyy')}</p>
-                <p><strong>Days Remaining:</strong> <span class="days-remaining">${reg.days_remaining} days</span></p>
+                <p><strong>Expiry Date:</strong> <span class="days-remaining">${format(new Date(reg.expiry_date), 'dd/MM/yyyy')}</span></p>
               </div>
             `).join('')}
           </body>
@@ -135,7 +132,7 @@ const handleGotIt = () => {
                     <User className="h-4 w-4 text-muted-foreground" />
                     <span className="font-medium">{registration.name}</span>
                   </div>
-                  <Badge variant={registration.days_remaining <= 2 ? "destructive" : "secondary"}>
+                  <Badge variant="destructive">
                     Expired
                   </Badge>
                 </div>
@@ -147,18 +144,18 @@ const handleGotIt = () => {
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <Hash className="h-3 w-3 text-muted-foreground" />
-                    <span className="font-mono text-xs">{registration.esep_id}</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
                     <MapPin className="h-3 w-3 text-muted-foreground" />
-                    <span>{registration.location}</span>
+                    <span>Panchayath: {registration.location}</span>
                   </div>
                   
                   <div className="flex items-center gap-2">
                     <Calendar className="h-3 w-3 text-muted-foreground" />
                     <span>Created: {format(new Date(registration.created_at), 'dd/MM/yyyy')}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-3 w-3 text-muted-foreground" />
+                    <span>Expires: {format(new Date(registration.expiry_date), 'dd/MM/yyyy')}</span>
                   </div>
                   
                   <div className="md:col-span-2">

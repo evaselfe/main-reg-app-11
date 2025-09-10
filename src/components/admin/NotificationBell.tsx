@@ -10,11 +10,10 @@ interface ExpiringRegistration {
   id: string;
   name: string;
   phone: string;
-  esep_id: string;
   category: string;
   location: string;
   created_at: string;
-  days_remaining: number;
+  expiry_date: string;
 }
 
 const NotificationBell = () => {
@@ -52,30 +51,35 @@ const NotificationBell = () => {
       const now = new Date();
       const processedRegs: ExpiringRegistration[] = registrations
         .map(reg => {
-          const expiryDate = new Date(reg.expiry_date);
-          const diffTime = expiryDate.getTime() - now.getTime();
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          
           return {
             id: reg.id,
             name: reg.full_name,
             phone: reg.mobile_number,
-            esep_id: reg.customer_id,
             category: reg.categories?.name_english || 'Unknown',
             location: reg.address,
             created_at: reg.created_at,
-            days_remaining: diffDays
+            expiry_date: reg.expiry_date
           };
         });
 
       // Separate expired and expiring registrations
       const expired = processedRegs
-        .filter(reg => reg.days_remaining <= 0)
-        .sort((a, b) => a.days_remaining - b.days_remaining);
+        .filter(reg => {
+          const expiryDate = new Date(reg.expiry_date);
+          const diffTime = expiryDate.getTime() - now.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          return diffDays <= 0;
+        })
+        .sort((a, b) => new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime());
       
       const expiring = processedRegs
-        .filter(reg => reg.days_remaining > 0 && reg.days_remaining <= 3)
-        .sort((a, b) => a.days_remaining - b.days_remaining);
+        .filter(reg => {
+          const expiryDate = new Date(reg.expiry_date);
+          const diffTime = expiryDate.getTime() - now.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          return diffDays > 0 && diffDays <= 3;
+        })
+        .sort((a, b) => new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime());
 
       setExpiredRegistrations(expired);
       setExpiringRegistrations(expiring);
