@@ -123,9 +123,9 @@ const NotificationBell = () => {
     };
   }, []);
 
-// Show alert automatically when expired or expiring registrations are found
+// Show alert automatically when expiring registrations are found (within 3 days)
 useEffect(() => {
-  if ((expiredRegistrations.length > 0 || expiringRegistrations.length > 0) && !acknowledged) {
+  if (expiringRegistrations.length > 0 && !acknowledged) {
     // Auto-show alert after 2 seconds on load
     const timer = setTimeout(() => {
       setShowAlert(true);
@@ -133,7 +133,7 @@ useEffect(() => {
 
     return () => clearTimeout(timer);
   }
-}, [expiredRegistrations.length, expiringRegistrations.length, acknowledged]);
+}, [expiringRegistrations.length, acknowledged]);
 
 
   return (
@@ -184,20 +184,22 @@ useEffect(() => {
       {/* Show expired registrations when bell is clicked */}
       {expiredRegistrations.length > 0 && (
         <ExpiringRegistrationsAlert
-          open={showAlert}
+          open={showAlert && expiringRegistrations.length === 0}
           onOpenChange={setShowAlert}
           registrations={expiredRegistrations}
           onGotIt={() => setAcknowledged(true)}
+          isExpiring={false}
         />
       )}
 
       {/* Show expiring registrations when exclamation is clicked */}
-      {expiringRegistrations.length > 0 && expiredRegistrations.length === 0 && (
+      {expiringRegistrations.length > 0 && (
         <ExpiringRegistrationsAlert
-          open={showAlert}
+          open={showAlert && expiredRegistrations.length === 0}
           onOpenChange={setShowAlert}
           registrations={expiringRegistrations}
           onGotIt={() => setAcknowledged(true)}
+          isExpiring={true}
         />
       )}
     </>
