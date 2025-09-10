@@ -301,22 +301,41 @@ const RegistrationsTab = () => {
       reg.mobile_number.includes(searchQuery) ||
       reg.customer_id.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesStatus = statusFilter === 'all' || reg.status === statusFilter;
+    let matchesStatus = statusFilter === 'all' || reg.status === statusFilter;
+    // When using expiry filter, only show Pending status regardless of selected status
+    if (expiryFilter !== '') {
+      matchesStatus = reg.status === 'pending';
+    }
     const matchesCategory = categoryFilter === 'all' || reg.categories?.name_english === categoryFilter;
     const matchesPanchayath = panchayathFilter === 'all' || reg.panchayaths?.name === panchayathFilter;
     
     const matchesExpiry = expiryFilter === '' || (() => {
-      // Don't show approved registrations in expiry filter (approved = finished)
+      // Always exclude approved registrations (finished)
       if (reg.status === 'approved') return false;
-      
-      const daysLeft = Math.ceil((new Date(reg.expiry_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+
       const filterDays = parseInt(expiryFilter);
-      
+      if (Number.isNaN(filterDays)) return false;
+
+      // Determine effective expiry date
+      const category = categories.find((c) => c.id === reg.category_id);
+      const expiryDays = category?.expiry_days ?? 30;
+
+      let effectiveExpiry: Date;
+      if (reg.expiry_date) {
+        effectiveExpiry = new Date(reg.expiry_date);
+      } else {
+        const d = new Date(reg.created_at);
+        d.setDate(d.getDate() + expiryDays);
+        effectiveExpiry = d;
+      }
+
+      const daysLeft = Math.ceil((effectiveExpiry.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
       // If filter is 0, show all expired registrations (including negative days)
       if (filterDays === 0) {
         return daysLeft <= 0;
       }
-      
+
       // For other values, show registrations expiring within that number of days
       return daysLeft <= filterDays && daysLeft >= 0;
     })();
