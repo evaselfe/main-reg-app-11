@@ -306,8 +306,19 @@ const RegistrationsTab = () => {
     const matchesPanchayath = panchayathFilter === 'all' || reg.panchayaths?.name === panchayathFilter;
     
     const matchesExpiry = expiryFilter === '' || (() => {
+      // Don't show approved registrations in expiry filter (approved = finished)
+      if (reg.status === 'approved') return false;
+      
       const daysLeft = Math.ceil((new Date(reg.expiry_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-      return daysLeft <= parseInt(expiryFilter) && daysLeft >= 0;
+      const filterDays = parseInt(expiryFilter);
+      
+      // If filter is 0, show all expired registrations (including negative days)
+      if (filterDays === 0) {
+        return daysLeft <= 0;
+      }
+      
+      // For other values, show registrations expiring within that number of days
+      return daysLeft <= filterDays && daysLeft >= 0;
     })();
 
     return matchesSearch && matchesStatus && matchesCategory && matchesPanchayath && matchesExpiry;
