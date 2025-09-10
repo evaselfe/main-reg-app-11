@@ -114,7 +114,7 @@ const Index = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="text-center relative z-10">
-              <p className="mb-6 text-lg font-medium">ഇത് ഒരു സ്പെഷ്യൽ ഓഫർ ആണ്. ഇ ലൈഫ് സൊസൈറ്റി മുന്നോട്ട് വയ്ക്കുന്ന എല്ലാ സാധ്യതകളിലേക്കും ഒരൊറ്റ രേങിസ്ട്രറേൻ വഴി അപേക്ഷിക്കുന്ന അവസരമാണ് ജോബ് കാർഡ് </p>
+              <p className="mb-6 text-lg font-medium">ഇത് ഒരു സ്പെഷ്യൽ ഓഫർ ആണ്. ഇ ലൈഫ് സൊസൈറ്റി മുന്നോട്ട് വയ്ക്കുന്ന എല്ലാ സാധ്യതകളിലേക്കും ഒരൊറ്റ രജിസ്‌ട്രേഷൻ വഴി അപേക്ഷിക്കുന്ന അവസരമാണ് ജോബ് കാർഡ് </p>
               <span className="font-bold text-4xl block mb-6 text-yellow-900">₹300</span>
               <Button size="lg" className="w-full bg-gradient-to-r from-yellow-900 to-yellow-800 text-yellow-100 hover:from-yellow-800 hover:to-yellow-700 shadow-xl border-2 border-yellow-700">
                 Get Job Card
