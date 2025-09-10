@@ -402,7 +402,10 @@ const RegistrationsTab = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="min-w-[120px]">Customer ID</TableHead>
-                      <TableHead className="min-w-[200px]">Contact Info</TableHead>
+                      <TableHead className="min-w-[150px]">Name</TableHead>
+                      <TableHead className="min-w-[120px]">Mobile</TableHead>
+                      <TableHead className="min-w-[200px]">Address</TableHead>
+                      <TableHead className="min-w-[120px]">Panchayath</TableHead>
                       <TableHead className="min-w-[180px]">Category</TableHead>
                       <TableHead className="min-w-[100px]">Status</TableHead>
                       <TableHead className="min-w-[80px]">Fee</TableHead>
@@ -417,17 +420,17 @@ const RegistrationsTab = () => {
                         <TableRow key={reg.id} className={`${categoryColor.bg} ${categoryColor.border} hover:opacity-80 transition-opacity`}>
                            <TableCell className="font-medium font-mono text-xs truncate">{reg.customer_id}</TableCell>
                            <TableCell className="p-2">
-                             <div className="space-y-1">
-                               <div className="font-medium text-sm truncate">{reg.full_name}</div>
-                               <div className="text-xs text-muted-foreground">{reg.mobile_number}</div>
-                               <div className="text-xs text-muted-foreground truncate" title={reg.address}>
-                                 {reg.address}
-                               </div>
-                               {reg.panchayaths && (
-                                 <div className="text-xs text-muted-foreground truncate">
-                                   {reg.panchayaths.name}
-                                 </div>
-                               )}
+                             <div className="font-medium text-sm truncate">{reg.full_name}</div>
+                           </TableCell>
+                           <TableCell className="p-2">
+                             <div className="text-sm">{reg.mobile_number}</div>
+                           </TableCell>
+                           <TableCell className="p-2">
+                             <div className="text-sm truncate" title={reg.address}>{reg.address}</div>
+                           </TableCell>
+                           <TableCell className="p-2">
+                             <div className="text-sm truncate">
+                               {reg.panchayaths?.name || 'N/A'}
                              </div>
                            </TableCell>
                           <TableCell>
