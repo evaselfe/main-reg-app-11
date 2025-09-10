@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell } from 'lucide-react';
+import { Bell, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,19 +18,16 @@ interface ExpiringRegistration {
 }
 
 const NotificationBell = () => {
-const [expiringRegistrations, setExpiringRegistrations] = useState<ExpiringRegistration[]>([]);
-const [showAlert, setShowAlert] = useState(false);
-const [loading, setLoading] = useState(false);
-const [acknowledged, setAcknowledged] = useState(false);
-const { toast } = useToast();
+  const [expiredRegistrations, setExpiredRegistrations] = useState<ExpiringRegistration[]>([]);
+  const [expiringRegistrations, setExpiringRegistrations] = useState<ExpiringRegistration[]>([]);
+  const [showAlert, setShowAlert] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [acknowledged, setAcknowledged] = useState(false);
+  const { toast } = useToast();
 
   const fetchExpiringRegistrations = async () => {
     try {
       setLoading(true);
-      
-      // Calculate the date 5 days from now
-      const fiveDaysFromNow = new Date();
-      fiveDaysFromNow.setDate(fiveDaysFromNow.getDate() + 5);
       
       const { data: registrations, error } = await supabase
         .from('registrations')
@@ -53,7 +50,7 @@ const { toast } = useToast();
 
       // Calculate days remaining for each registration
       const now = new Date();
-      const expiringRegs: ExpiringRegistration[] = registrations
+      const processedRegs: ExpiringRegistration[] = registrations
         .map(reg => {
           const expiryDate = new Date(reg.expiry_date);
           const diffTime = expiryDate.getTime() - now.getTime();
@@ -69,11 +66,19 @@ const { toast } = useToast();
             created_at: reg.created_at,
             days_remaining: diffDays
           };
-        })
+        });
+
+      // Separate expired and expiring registrations
+      const expired = processedRegs
         .filter(reg => reg.days_remaining <= 0)
         .sort((a, b) => a.days_remaining - b.days_remaining);
+      
+      const expiring = processedRegs
+        .filter(reg => reg.days_remaining > 0 && reg.days_remaining <= 3)
+        .sort((a, b) => a.days_remaining - b.days_remaining);
 
-      setExpiringRegistrations(expiringRegs);
+      setExpiredRegistrations(expired);
+      setExpiringRegistrations(expiring);
     } catch (error) {
       console.error('Error fetching expiring registrations:', error);
       toast({
@@ -114,9 +119,9 @@ const { toast } = useToast();
     };
   }, []);
 
-// Show alert automatically when expiring registrations are found
+// Show alert automatically when expired or expiring registrations are found
 useEffect(() => {
-  if (expiringRegistrations.length > 0 && !acknowledged) {
+  if ((expiredRegistrations.length > 0 || expiringRegistrations.length > 0) && !acknowledged) {
     // Auto-show alert after 2 seconds on load
     const timer = setTimeout(() => {
       setShowAlert(true);
@@ -124,42 +129,65 @@ useEffect(() => {
 
     return () => clearTimeout(timer);
   }
-}, [expiringRegistrations.length, acknowledged]);
+}, [expiredRegistrations.length, expiringRegistrations.length, acknowledged]);
 
-  const handleBellClick = () => {
-    if (expiringRegistrations.length > 0) {
+  const handleNotificationClick = () => {
+    if (expiredRegistrations.length > 0 || expiringRegistrations.length > 0) {
       setShowAlert(true);
     }
   };
 
   return (
     <>
-      <div className="relative">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleBellClick}
-          className="relative p-2"
-          disabled={loading}
-        >
-          <Bell className="h-5 w-5" />
-          {expiringRegistrations.length > 0 && (
-            <Badge 
-              variant="destructive" 
-              className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+      <div className="flex items-center gap-2">
+        {/* Bell icon for expired registrations */}
+        {expiredRegistrations.length > 0 && (
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleNotificationClick}
+              className="relative p-2"
+              disabled={loading}
             >
-              {expiringRegistrations.length}
-            </Badge>
-          )}
-        </Button>
+              <Bell className="h-5 w-5" />
+              <Badge 
+                variant="destructive" 
+                className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+              >
+                {expiredRegistrations.length}
+              </Badge>
+            </Button>
+          </div>
+        )}
+
+        {/* Exclamation icon for registrations expiring within 3 days */}
+        {expiringRegistrations.length > 0 && (
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleNotificationClick}
+              className="relative p-2"
+              disabled={loading}
+            >
+              <AlertTriangle className="h-5 w-5" />
+              <Badge 
+                className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-orange-500 hover:bg-orange-600 text-white"
+              >
+                {expiringRegistrations.length}
+              </Badge>
+            </Button>
+          </div>
+        )}
       </div>
 
-<ExpiringRegistrationsAlert
-  open={showAlert}
-  onOpenChange={setShowAlert}
-  registrations={expiringRegistrations}
-  onGotIt={() => setAcknowledged(true)}
-/>
+      <ExpiringRegistrationsAlert
+        open={showAlert}
+        onOpenChange={setShowAlert}
+        registrations={[...expiredRegistrations, ...expiringRegistrations]}
+        onGotIt={() => setAcknowledged(true)}
+      />
     </>
   );
 };
