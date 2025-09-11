@@ -102,7 +102,7 @@ const CategoryTransferRequest = ({
         <CardHeader>
           <CardTitle className="text-lg text-blue-800">Category Transfer Request</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 bg-orange-500 hover:bg-orange-400">
           <div className="grid md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
             <div>
               <Label className="text-sm font-medium text-muted-foreground">Current Category</Label>
