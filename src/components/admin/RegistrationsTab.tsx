@@ -6,10 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Search, FileDown, Edit, Trash2, Check, X, RotateCcw } from 'lucide-react';
+import { Search, FileDown, Edit, Trash2, Check, X, RotateCcw, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import EditRegistrationDialog from './EditRegistrationDialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface Registration {
   id: string;
@@ -191,7 +192,7 @@ const RegistrationsTab = () => {
     }
   };
 
-  const handleExportRegistrations = async () => {
+  const handleExportCSV = async () => {
     try {
       // Create CSV data with only requested fields
       const headers = ['Name', 'Mobile Number', 'Panchayath', 'Category', 'Registered Date', 'Expiry Date'];
@@ -214,9 +215,134 @@ const RegistrationsTab = () => {
       a.download = `registrations-export-${format(new Date(), 'yyyy-MM-dd')}.csv`;
       a.click();
       window.URL.revokeObjectURL(url);
-      toast.success('Registrations exported successfully');
+      toast.success('Registrations exported to CSV successfully');
     } catch (error) {
       toast.error('Error exporting registrations');
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      // Create HTML content for PDF
+      const htmlContent = `
+        <html>
+          <head>
+            <title>Registrations Report</title>
+            <style>
+              body { 
+                font-family: Arial, sans-serif; 
+                margin: 20px; 
+                font-size: 12px;
+                line-height: 1.4;
+              }
+              h1 { 
+                color: #333; 
+                border-bottom: 2px solid #007bff; 
+                padding-bottom: 10px; 
+                margin-bottom: 20px;
+              }
+              .summary {
+                background: #f8f9fa;
+                padding: 15px;
+                border-radius: 5px;
+                margin-bottom: 20px;
+              }
+              .registration { 
+                border: 1px solid #ddd; 
+                margin: 10px 0; 
+                padding: 15px; 
+                border-radius: 5px; 
+                page-break-inside: avoid;
+              }
+              .header { 
+                font-weight: bold; 
+                color: #007bff; 
+                font-size: 14px;
+                margin-bottom: 8px;
+              }
+              .details {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+                margin-bottom: 8px;
+              }
+              .detail-item {
+                margin-bottom: 4px;
+              }
+              .label {
+                font-weight: bold;
+                color: #666;
+              }
+              .status {
+                display: inline-block;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 11px;
+                font-weight: bold;
+                text-transform: uppercase;
+              }
+              .status-pending { background: #fff3cd; color: #856404; }
+              .status-approved { background: #d4edda; color: #155724; }
+              .status-rejected { background: #f8d7da; color: #721c24; }
+              .expiry-warning { color: #fd7e14; font-weight: bold; }
+              @media print {
+                body { margin: 0; }
+                .registration { break-inside: avoid; }
+              }
+            </style>
+          </head>
+          <body>
+            <h1>Registrations Report</h1>
+            <div class="summary">
+              <p><strong>Generated on:</strong> ${format(new Date(), 'dd/MM/yyyy HH:mm')}</p>
+              <p><strong>Total registrations:</strong> ${filteredRegistrations.length}</p>
+              <p><strong>Status breakdown:</strong></p>
+              <ul>
+                <li>Pending: ${filteredRegistrations.filter(r => r.status === 'pending').length}</li>
+                <li>Approved: ${filteredRegistrations.filter(r => r.status === 'approved').length}</li>
+                <li>Rejected: ${filteredRegistrations.filter(r => r.status === 'rejected').length}</li>
+              </ul>
+            </div>
+            ${filteredRegistrations.map(reg => `
+              <div class="registration">
+                <div class="header">${reg.full_name} (${reg.customer_id})</div>
+                <div class="details">
+                  <div>
+                    <div class="detail-item"><span class="label">Mobile:</span> ${reg.mobile_number}</div>
+                    <div class="detail-item"><span class="label">Address:</span> ${reg.address}</div>
+                    <div class="detail-item"><span class="label">Panchayath:</span> ${reg.panchayaths?.name || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <div class="detail-item"><span class="label">Category:</span> ${reg.categories?.name_english || 'N/A'}</div>
+                    <div class="detail-item"><span class="label">Fee:</span> ₹${reg.fee}</div>
+                    <div class="detail-item">
+                      <span class="label">Status:</span> 
+                      <span class="status status-${reg.status}">${reg.status}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="details">
+                  <div class="detail-item"><span class="label">Registered:</span> ${format(new Date(reg.created_at), 'dd/MM/yyyy')}</div>
+                  ${reg.approved_date ? `<div class="detail-item"><span class="label">Approved:</span> ${format(new Date(reg.approved_date), 'dd/MM/yyyy')}</div>` : ''}
+                  ${reg.expiry_date ? `<div class="detail-item ${Math.ceil((new Date(reg.expiry_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) <= 30 ? 'expiry-warning' : ''}"><span class="label">Expires:</span> ${format(new Date(reg.expiry_date), 'dd/MM/yyyy')}</div>` : ''}
+                </div>
+              </div>
+            `).join('')}
+          </body>
+        </html>
+      `;
+
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        printWindow.print();
+        toast.success('PDF export initiated - use your browser print dialog');
+      } else {
+        toast.error('Unable to open print window - please check popup blockers');
+      }
+    } catch (error) {
+      toast.error('Error exporting to PDF');
     }
   };
 
@@ -412,10 +538,36 @@ const RegistrationsTab = () => {
               min="0"
             />
 
-            <Button variant="outline" className="text-xs" onClick={handleExportRegistrations}>
-              <FileDown className="w-3 h-3 mr-1" />
-              <span className="hidden sm:inline">Export</span>
-            </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="text-xs">
+                  <FileDown className="w-3 h-3 mr-1" />
+                  <span className="hidden sm:inline">Export</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48 p-2">
+                <div className="space-y-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full justify-start text-xs"
+                    onClick={handleExportCSV}
+                  >
+                    <FileDown className="w-3 h-3 mr-2" />
+                    Export CSV
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full justify-start text-xs"
+                    onClick={handleExportPDF}
+                  >
+                    <FileText className="w-3 h-3 mr-2" />
+                    Export PDF
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
       </CardHeader>
