@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import Navigation from '@/components/Navigation';
+import CategoryTransferRequest from '@/components/CategoryTransferRequest';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -232,6 +233,15 @@ const CheckStatus = () => {
                       </div>
                     )}
                   </div>
+                )}
+
+                {(registration.status === 'approved' || registration.status === 'pending') && (
+                  <CategoryTransferRequest 
+                    registration={registration}
+                    onTransferRequested={() => {
+                      toast.success('Transfer request submitted successfully');
+                    }}
+                  />
                 )}
 
               </CardContent>

@@ -12,6 +12,7 @@ import UtilitiesTab from '@/components/admin/UtilitiesTab';
 import AccountsTab from '@/components/admin/AccountsTab';
 import ReportsTab from '@/components/admin/ReportsTab';
 import AdminUsersTab from '@/components/admin/AdminUsersTab';
+import CategoryTransferTab from '@/components/admin/CategoryTransferTab';
 import NotificationBell from '@/components/admin/NotificationBell';
 
 const AdminPanel = () => {
@@ -38,6 +39,7 @@ const AdminPanel = () => {
   const canViewAccounts = hasPermission('accounts_read') || hasPermission('accounts_write');
   const canViewReports = hasPermission('manage_reports') || hasPermission('reports_read');
   const canViewAdminUsers = hasPermission('manage_users') || hasPermission('admin_users_read');
+  const canViewTransfers = hasPermission('manage_registrations');
 
   // Get the first available tab for default value
   const getDefaultTab = () => {
@@ -49,6 +51,7 @@ const AdminPanel = () => {
     if (canViewAccounts) return 'accounts';
     if (canViewReports) return 'reports';
     if (canViewAdminUsers) return 'admin-users';
+    if (canViewTransfers) return 'transfers';
     return 'registrations'; // fallback
   };
 
@@ -72,7 +75,7 @@ const AdminPanel = () => {
         
         <Tabs defaultValue={getDefaultTab()} className="w-full">
           <div className="overflow-x-auto">
-            <TabsList className="flex w-max sm:grid sm:w-full h-auto p-1" style={{ gridTemplateColumns: `repeat(${[canViewRegistrations, canViewCategories, canViewPanchayaths, canViewAnnouncements, canViewUtilities, canViewAccounts, canViewReports, canViewAdminUsers].filter(Boolean).length}, 1fr)` }}>
+            <TabsList className="flex w-max sm:grid sm:w-full h-auto p-1" style={{ gridTemplateColumns: `repeat(${[canViewRegistrations, canViewCategories, canViewPanchayaths, canViewAnnouncements, canViewUtilities, canViewAccounts, canViewReports, canViewAdminUsers, canViewTransfers].filter(Boolean).length}, 1fr)` }}>
               {canViewRegistrations && (
                 <TabsTrigger value="registrations" className="whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3">
                   Registrations
@@ -111,6 +114,11 @@ const AdminPanel = () => {
               {canViewAdminUsers && (
                 <TabsTrigger value="admin-users" className="whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3">
                   Admin Users
+                </TabsTrigger>
+              )}
+              {canViewTransfers && (
+                <TabsTrigger value="transfers" className="whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3">
+                  Transfers
                 </TabsTrigger>
               )}
             </TabsList>
@@ -161,6 +169,12 @@ const AdminPanel = () => {
           {canViewAdminUsers && (
             <TabsContent value="admin-users">
               <AdminUsersTab />
+            </TabsContent>
+          )}
+          
+          {canViewTransfers && (
+            <TabsContent value="transfers">
+              <CategoryTransferTab />
             </TabsContent>
           )}
         </Tabs>
