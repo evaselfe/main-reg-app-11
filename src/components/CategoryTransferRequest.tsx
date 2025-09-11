@@ -108,7 +108,7 @@ const CategoryTransferRequest = ({ registration, onTransferRequested }: Category
           className="w-full"
         >
           <RefreshCw className="w-4 h-4 mr-2" />
-          Request Category Transfer..
+          Request Category Transfer(കാറ്റഗറി മാറ്റാൻ )
         </Button>
       </div>
     );
