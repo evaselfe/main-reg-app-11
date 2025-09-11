@@ -91,7 +91,7 @@ const CategoryTransferRequest = ({
   const selectedCategory = categories.find(cat => cat.id === selectedCategoryId);
   if (!showForm) {
     return <div className="mt-6">
-        <Button onClick={() => setShowForm(true)} variant="outline" className="w-full bg-orange-500 hover:bg-orange-400">
+        <Button onClick={() => setShowForm(true)} variant="outline" className="w-full bg-orange-300 hover:bg-orange-200">
           <RefreshCw className="w-4 h-4 mr-2" />
           Request Category Transfer(കാറ്റഗറി മാറ്റാൻ )
         </Button>
