@@ -19,7 +19,8 @@ interface ExpiringRegistration {
 const NotificationBell = () => {
   const [expiredRegistrations, setExpiredRegistrations] = useState<ExpiringRegistration[]>([]);
   const [expiringRegistrations, setExpiringRegistrations] = useState<ExpiringRegistration[]>([]);
-  const [showAlert, setShowAlert] = useState(false);
+  const [showExpiredAlert, setShowExpiredAlert] = useState(false);
+  const [showExpiringAlert, setShowExpiringAlert] = useState(false);
   const [loading, setLoading] = useState(false);
   const [acknowledged, setAcknowledged] = useState(false);
   const { toast } = useToast();
@@ -83,6 +84,9 @@ const NotificationBell = () => {
 
       setExpiredRegistrations(expired);
       setExpiringRegistrations(expiring);
+      
+      console.log('Expired registrations:', expired.length);
+      console.log('Expiring registrations:', expiring.length);
     } catch (error) {
       console.error('Error fetching expiring registrations:', error);
       toast({
@@ -125,15 +129,19 @@ const NotificationBell = () => {
 
 // Show alert automatically when expiring registrations are found (within 3 days)
 useEffect(() => {
-  if (expiringRegistrations.length > 0 && !acknowledged) {
+  if ((expiringRegistrations.length > 0 || expiredRegistrations.length > 0) && !acknowledged) {
     // Auto-show alert after 2 seconds on load
     const timer = setTimeout(() => {
-      setShowAlert(true);
+      if (expiredRegistrations.length > 0) {
+        setShowExpiredAlert(true);
+      } else if (expiringRegistrations.length > 0) {
+        setShowExpiringAlert(true);
+      }
     }, 2000);
 
     return () => clearTimeout(timer);
   }
-}, [expiringRegistrations.length, acknowledged]);
+}, [expiringRegistrations.length, expiredRegistrations.length, acknowledged]);
 
 
   return (
@@ -145,7 +153,7 @@ useEffect(() => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setShowAlert(true)}
+              onClick={() => setShowExpiredAlert(true)}
               className="relative p-2"
               disabled={loading}
             >
@@ -166,7 +174,7 @@ useEffect(() => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setShowAlert(true)}
+              onClick={() => setShowExpiringAlert(true)}
               className="relative p-2"
               disabled={loading}
             >
@@ -182,26 +190,22 @@ useEffect(() => {
       </div>
 
       {/* Show expired registrations when bell is clicked */}
-      {expiredRegistrations.length > 0 && (
-        <ExpiringRegistrationsAlert
-          open={showAlert && expiringRegistrations.length === 0}
-          onOpenChange={setShowAlert}
-          registrations={expiredRegistrations}
-          onGotIt={() => setAcknowledged(true)}
-          isExpiring={false}
-        />
-      )}
+      <ExpiringRegistrationsAlert
+        open={showExpiredAlert}
+        onOpenChange={setShowExpiredAlert}
+        registrations={expiredRegistrations}
+        onGotIt={() => setAcknowledged(true)}
+        isExpiring={false}
+      />
 
-      {/* Show expiring registrations when exclamation is clicked */}
-      {expiringRegistrations.length > 0 && (
-        <ExpiringRegistrationsAlert
-          open={showAlert && expiredRegistrations.length === 0}
-          onOpenChange={setShowAlert}
-          registrations={expiringRegistrations}
-          onGotIt={() => setAcknowledged(true)}
-          isExpiring={true}
-        />
-      )}
+      {/* Show expiring registrations when exclamation is clicked or auto-shown */}
+      <ExpiringRegistrationsAlert
+        open={showExpiringAlert}
+        onOpenChange={setShowExpiringAlert}
+        registrations={expiringRegistrations}
+        onGotIt={() => setAcknowledged(true)}
+        isExpiring={true}
+      />
     </>
   );
 };
