@@ -195,12 +195,13 @@ const RegistrationsTab = () => {
   const handleExportCSV = async () => {
     try {
       // Create CSV data with only requested fields
-      const headers = ['Name', 'Mobile Number', 'Panchayath', 'Category', 'Registered Date', 'Expiry Date'];
+      const headers = ['Name', 'Mobile Number', 'Ward', 'Panchayath', 'Category', 'Registered Date', 'Expiry Date'];
       const csvData = [
         headers.join(','),
         ...filteredRegistrations.map(reg => [
           `"${reg.full_name}"`,
           reg.mobile_number,
+          `"${reg.ward || 'N/A'}"`,
           `"${reg.panchayaths?.name || 'N/A'}"`,
           `"${reg.categories?.name_english || 'N/A'}"`,
           format(new Date(reg.created_at), 'dd/MM/yyyy'),
