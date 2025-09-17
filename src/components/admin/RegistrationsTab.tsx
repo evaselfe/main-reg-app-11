@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Search, FileDown, Edit, Trash2, Check, X, RotateCcw, FileText } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Search, FileDown, Edit, Trash2, Check, X, RotateCcw, FileText, CheckSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import EditRegistrationDialog from './EditRegistrationDialog';
@@ -55,6 +56,7 @@ const RegistrationsTab = () => {
   const [editingRegistration, setEditingRegistration] = useState<Registration | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [expiryFilter, setExpiryFilter] = useState('');
+  const [selectedRegistrations, setSelectedRegistrations] = useState<string[]>([]);
 
   useEffect(() => {
     fetchRegistrations();
@@ -189,6 +191,57 @@ const RegistrationsTab = () => {
       }
     } catch (error) {
       toast.error('Error restoring registration');
+    }
+  };
+
+  const handleBulkApprove = async () => {
+    if (selectedRegistrations.length === 0) {
+      toast.error('Please select registrations to approve');
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to approve ${selectedRegistrations.length} registration(s)?`)) return;
+
+    try {
+      const approvalData = {
+        status: 'approved',
+        approved_date: new Date().toISOString(),
+        approved_by: 'eva'
+      };
+
+      const { error } = await supabase
+        .from('registrations')
+        .update(approvalData)
+        .in('id', selectedRegistrations);
+
+      if (error) {
+        toast.error('Error approving registrations');
+      } else {
+        toast.success(`${selectedRegistrations.length} registration(s) approved successfully`);
+        setSelectedRegistrations([]);
+        fetchRegistrations();
+      }
+    } catch (error) {
+      toast.error('Error approving registrations');
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const pendingRegistrations = filteredRegistrations
+        .filter(reg => reg.status === 'pending')
+        .map(reg => reg.id);
+      setSelectedRegistrations(pendingRegistrations);
+    } else {
+      setSelectedRegistrations([]);
+    }
+  };
+
+  const handleSelectRegistration = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedRegistrations(prev => [...prev, id]);
+    } else {
+      setSelectedRegistrations(prev => prev.filter(regId => regId !== id));
     }
   };
 
@@ -578,12 +631,47 @@ const RegistrationsTab = () => {
           <div className="text-center py-8">Loading...</div>
         ) : (
           <>
+            {/* Bulk Actions */}
+            {selectedRegistrations.length > 0 && (
+              <div className="mb-4 p-4 bg-muted rounded-lg">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">
+                    {selectedRegistrations.length} registration(s) selected
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={handleBulkApprove}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <CheckSquare className="w-4 h-4 mr-1" />
+                      Approve Selected
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setSelectedRegistrations([])}
+                    >
+                      Clear Selection
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Desktop Table View */}
             <div className="hidden lg:block">
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-12">
+                        <Checkbox
+                          checked={selectedRegistrations.length > 0 && selectedRegistrations.length === filteredRegistrations.filter(reg => reg.status === 'pending').length}
+                          onCheckedChange={handleSelectAll}
+                          aria-label="Select all pending registrations"
+                        />
+                      </TableHead>
                       <TableHead className="min-w-[120px]">Customer ID</TableHead>
                       <TableHead className="min-w-[150px]">Name</TableHead>
                       <TableHead className="min-w-[120px]">Mobile</TableHead>
@@ -601,6 +689,14 @@ const RegistrationsTab = () => {
                       const categoryColor = getCategoryColor(reg.categories?.name_english || '');
                       return (
                         <TableRow key={reg.id} className={`${categoryColor.bg} ${categoryColor.border} hover:opacity-80 transition-opacity`}>
+                           <TableCell>
+                             <Checkbox
+                               checked={selectedRegistrations.includes(reg.id)}
+                               onCheckedChange={(checked) => handleSelectRegistration(reg.id, checked as boolean)}
+                               disabled={reg.status !== 'pending'}
+                               aria-label={`Select registration ${reg.customer_id}`}
+                             />
+                           </TableCell>
                            <TableCell className="font-medium font-mono text-xs truncate">{reg.customer_id}</TableCell>
                            <TableCell className="p-2">
                              <div className="font-medium text-sm truncate">{reg.full_name}</div>
