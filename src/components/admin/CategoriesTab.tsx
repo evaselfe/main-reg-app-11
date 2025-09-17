@@ -29,6 +29,8 @@ interface Category {
   expiry_days: number;
   is_active: boolean;
   qr_code_url?: string;
+  offer_start_date?: string;
+  offer_end_date?: string;
 }
 
 const CategoriesTab = () => {
@@ -42,7 +44,9 @@ const CategoriesTab = () => {
     description: '',
     actual_fee: 0,
     offer_fee: 0,
-    expiry_days: 30
+    expiry_days: 30,
+    offer_start_date: '',
+    offer_end_date: ''
   });
   const [qrFile, setQrFile] = useState<File | null>(null);
   const [qrPreview, setQrPreview] = useState<string | null>(null);
@@ -78,7 +82,9 @@ const CategoriesTab = () => {
       description: '',
       actual_fee: 0,
       offer_fee: 0,
-      expiry_days: 30
+      expiry_days: 30,
+      offer_start_date: '',
+      offer_end_date: ''
     });
     setEditingCategory(null);
     setQrFile(null);
@@ -97,7 +103,9 @@ const CategoriesTab = () => {
       description: category.description || '',
       actual_fee: category.actual_fee,
       offer_fee: category.offer_fee,
-      expiry_days: category.expiry_days
+      expiry_days: category.expiry_days,
+      offer_start_date: category.offer_start_date || '',
+      offer_end_date: category.offer_end_date || ''
     });
     setEditingCategory(category);
     setQrFile(null);
@@ -134,6 +142,8 @@ const CategoriesTab = () => {
             actual_fee: formData.actual_fee,
             offer_fee: formData.offer_fee,
             expiry_days: formData.expiry_days,
+            offer_start_date: formData.offer_start_date || null,
+            offer_end_date: formData.offer_end_date || null,
           })
           .eq('id', editingCategory.id);
 
@@ -185,6 +195,8 @@ const CategoriesTab = () => {
             actual_fee: formData.actual_fee,
             offer_fee: formData.offer_fee,
             expiry_days: formData.expiry_days,
+            offer_start_date: formData.offer_start_date || null,
+            offer_end_date: formData.offer_end_date || null,
           })
           .select('id')
           .single();
@@ -343,45 +355,69 @@ const CategoriesTab = () => {
                       <h4 className="text-base font-medium text-foreground">Pricing & Expiry</h4>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                      <div className="space-y-3">
-                        <Label htmlFor="actual_fee" className="text-sm font-medium">Actual Fee (₹)</Label>
-                        <Input
-                          id="actual_fee"
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={formData.actual_fee}
-                          onChange={(e) => setFormData({ ...formData, actual_fee: parseFloat(e.target.value) || 0 })}
-                          className="h-11"
-                        />
-                      </div>
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                       <div className="space-y-3">
+                         <Label htmlFor="actual_fee" className="text-sm font-medium">Actual Fee (₹)</Label>
+                         <Input
+                           id="actual_fee"
+                           type="number"
+                           min="0"
+                           step="0.01"
+                           value={formData.actual_fee}
+                           onChange={(e) => setFormData({ ...formData, actual_fee: parseFloat(e.target.value) || 0 })}
+                           className="h-11"
+                         />
+                       </div>
 
-                      <div className="space-y-3">
-                        <Label htmlFor="offer_fee" className="text-sm font-medium">Offer Fee (₹)</Label>
-                        <Input
-                          id="offer_fee"
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={formData.offer_fee}
-                          onChange={(e) => setFormData({ ...formData, offer_fee: parseFloat(e.target.value) || 0 })}
-                          className="h-11"
-                        />
-                      </div>
+                       <div className="space-y-3">
+                         <Label htmlFor="offer_fee" className="text-sm font-medium">Offer Fee (₹)</Label>
+                         <Input
+                           id="offer_fee"
+                           type="number"
+                           min="0"
+                           step="0.01"
+                           value={formData.offer_fee}
+                           onChange={(e) => setFormData({ ...formData, offer_fee: parseFloat(e.target.value) || 0 })}
+                           className="h-11"
+                         />
+                       </div>
 
-                      <div className="space-y-3">
-                        <Label htmlFor="expiry_days" className="text-sm font-medium">Expiry (Days)</Label>
-                        <Input
-                          id="expiry_days"
-                          type="number"
-                          min="1"
-                          value={formData.expiry_days}
-                          onChange={(e) => setFormData({ ...formData, expiry_days: parseInt(e.target.value) || 30 })}
-                          className="h-11"
-                        />
-                      </div>
-                    </div>
+                       <div className="space-y-3">
+                         <Label htmlFor="expiry_days" className="text-sm font-medium">Expiry (Days)</Label>
+                         <Input
+                           id="expiry_days"
+                           type="number"
+                           min="1"
+                           value={formData.expiry_days}
+                           onChange={(e) => setFormData({ ...formData, expiry_days: parseInt(e.target.value) || 30 })}
+                           className="h-11"
+                         />
+                       </div>
+                     </div>
+
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                       <div className="space-y-3">
+                         <Label htmlFor="offer_start_date" className="text-sm font-medium">Offer Start Date</Label>
+                         <Input
+                           id="offer_start_date"
+                           type="date"
+                           value={formData.offer_start_date}
+                           onChange={(e) => setFormData({ ...formData, offer_start_date: e.target.value })}
+                           className="h-11"
+                         />
+                       </div>
+
+                       <div className="space-y-3">
+                         <Label htmlFor="offer_end_date" className="text-sm font-medium">Offer End Date</Label>
+                         <Input
+                           id="offer_end_date"
+                           type="date"
+                           value={formData.offer_end_date}
+                           onChange={(e) => setFormData({ ...formData, offer_end_date: e.target.value })}
+                           className="h-11"
+                         />
+                       </div>
+                     </div>
                   </div>
 
                   {/* Payment QR Section */}
