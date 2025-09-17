@@ -5,40 +5,93 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Users, FileCheck, Link as LinkIcon, Megaphone } from 'lucide-react';
+
 interface Announcement {
   id: string;
   title: string;
   content: string;
   created_at: string;
 }
+
 interface Utility {
   id: string;
   name: string;
   url: string;
   description: string;
 }
+
+interface JobCardSpecial {
+  id: string;
+  name_english: string;
+  name_malayalam: string;
+  description: string;
+  actual_fee: number;
+  offer_fee: number;
+  offer_start_date?: string;
+  offer_end_date?: string;
+}
+
 const Index = () => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [utilities, setUtilities] = useState<Utility[]>([]);
+  const [jobCardSpecial, setJobCardSpecial] = useState<JobCardSpecial | null>(null);
+
   useEffect(() => {
     fetchAnnouncements();
     fetchUtilities();
+    fetchJobCardSpecial();
   }, []);
+
   const fetchAnnouncements = async () => {
-    const {
-      data
-    } = await supabase.from('announcements').select('*').eq('is_active', true).order('created_at', {
-      ascending: false
-    }).limit(3);
+    const { data } = await supabase
+      .from('announcements')
+      .select('*')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(3);
+    
     if (data) setAnnouncements(data);
   };
+
   const fetchUtilities = async () => {
-    const {
-      data
-    } = await supabase.from('utilities').select('*').eq('is_active', true).limit(6);
+    const { data } = await supabase
+      .from('utilities')
+      .select('*')
+      .eq('is_active', true)
+      .limit(6);
+    
     if (data) setUtilities(data);
   };
-  return <div className="min-h-screen bg-background">
+
+  const fetchJobCardSpecial = async () => {
+    const { data } = await supabase
+      .from('categories')
+      .select('*')
+      .ilike('name_english', '%job card%')
+      .eq('is_active', true)
+      .single();
+    
+    if (data) setJobCardSpecial(data);
+  };
+
+  const getOfferTimeRemaining = (endDate: string) => {
+    const now = new Date();
+    const end = new Date(endDate);
+    const diffTime = end.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const isOfferActive = (startDate?: string, endDate?: string) => {
+    if (!startDate || !endDate) return true;
+    const now = new Date();
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    return now >= start && now <= end;
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
       <Navigation />
       
       {/* Hero Section */}
@@ -104,27 +157,48 @@ const Index = () => {
       </section>
 
       {/* Job Card Special */}
-      <section className="py-20 bg-gradient-to-r from-vibrant-purple/20 via-vibrant-pink/20 to-vibrant-orange/20">
-        <div className="container mx-auto px-4 max-w-lg">
-          <Card className="golden-card text-black shadow-2xl rounded-3xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-yellow-200/50 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
-            <CardHeader>
-              <CardTitle className="text-3xl font-bold text-center relative z-10">
-                Job Card (Special)
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-center relative z-10">
-              <p className="mb-6 text-lg font-medium">ഇത് ഒരു സ്പെഷ്യൽ ഓഫർ ആണ്. ഇ ലൈഫ് സൊസൈറ്റി മുന്നോട്ട് വയ്ക്കുന്ന എല്ലാ സാധ്യതകളിലേക്കും ഒരൊറ്റ രജിസ്‌ട്രേഷൻ വഴി അപേക്ഷിക്കുന്ന അവസരമാണ് ജോബ് കാർഡ് </p>
-              <span className="font-bold text-4xl block mb-6 text-yellow-900">₹300</span>
-              <Link to="/categories">
-                <Button size="lg" className="w-full bg-gradient-to-r from-yellow-900 to-yellow-800 text-yellow-100 hover:from-yellow-800 hover:to-yellow-700 shadow-xl border-2 border-yellow-700">
-                  Get Job Card
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
+      {jobCardSpecial && (
+        <section className="py-20 bg-gradient-to-r from-vibrant-purple/20 via-vibrant-pink/20 to-vibrant-orange/20">
+          <div className="container mx-auto px-4 max-w-lg">
+            <Card className="golden-card text-black shadow-2xl rounded-3xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-yellow-200/50 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
+              
+              {jobCardSpecial.offer_end_date && isOfferActive(jobCardSpecial.offer_start_date, jobCardSpecial.offer_end_date) && (
+                <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold z-20">
+                  ⏰ Offer ends in {getOfferTimeRemaining(jobCardSpecial.offer_end_date)} day{getOfferTimeRemaining(jobCardSpecial.offer_end_date) !== 1 ? 's' : ''}
+                </div>
+              )}
+              
+              <CardHeader>
+                <CardTitle className="text-3xl font-bold text-center relative z-10">
+                  {jobCardSpecial.name_english}
+                </CardTitle>
+                <p className="text-center text-black/80 relative z-10">{jobCardSpecial.name_malayalam}</p>
+              </CardHeader>
+              <CardContent className="text-center relative z-10">
+                <p className="mb-6 text-lg font-medium">{jobCardSpecial.description}</p>
+                
+                {jobCardSpecial.actual_fee > 0 && jobCardSpecial.offer_fee > 0 && jobCardSpecial.offer_fee < jobCardSpecial.actual_fee ? (
+                  <div className="mb-6">
+                    <span className="font-bold text-4xl block text-yellow-900">₹{jobCardSpecial.offer_fee}</span>
+                    <span className="text-lg line-through text-black/60">₹{jobCardSpecial.actual_fee}</span>
+                  </div>
+                ) : jobCardSpecial.actual_fee > 0 ? (
+                  <span className="font-bold text-4xl block mb-6 text-yellow-900">₹{jobCardSpecial.actual_fee}</span>
+                ) : (
+                  <span className="font-bold text-4xl block mb-6 text-green-700">Free</span>
+                )}
+                
+                <Link to="/categories">
+                  <Button size="lg" className="w-full bg-gradient-to-r from-yellow-900 to-yellow-800 text-yellow-100 hover:from-yellow-800 hover:to-yellow-700 shadow-xl border-2 border-yellow-700">
+                    Get Job Card
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+      )}
 
       {/* Utilities Section */}
       <section className="py-20 bg-gradient-to-br from-vibrant-blue/15 via-white to-vibrant-green/15">
@@ -132,8 +206,17 @@ const Index = () => {
           <h2 className="text-4xl font-bold text-center mb-16 bg-gradient-to-r from-vibrant-blue to-vibrant-green bg-clip-text text-transparent">Utility Links</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {utilities.map((utility, index) => {
-            const colors = ['from-vibrant-blue/20 to-vibrant-purple/20 hover:from-vibrant-blue/30 hover:to-vibrant-purple/30', 'from-vibrant-green/20 to-vibrant-blue/20 hover:from-vibrant-green/30 hover:to-vibrant-blue/30', 'from-vibrant-orange/20 to-vibrant-pink/20 hover:from-vibrant-orange/30 hover:to-vibrant-pink/30', 'from-vibrant-pink/20 to-vibrant-purple/20 hover:from-vibrant-pink/30 hover:to-vibrant-purple/30', 'from-vibrant-purple/20 to-vibrant-blue/20 hover:from-vibrant-purple/30 hover:to-vibrant-blue/30', 'from-vibrant-green/20 to-vibrant-orange/20 hover:from-vibrant-green/30 hover:to-vibrant-orange/30'];
-            return <Card key={utility.id} className={`transition-all duration-300 hover:scale-105 hover:shadow-xl bg-gradient-to-br ${colors[index % colors.length]} border-2 border-white/50`}>
+              const colors = [
+                'from-vibrant-blue/20 to-vibrant-purple/20 hover:from-vibrant-blue/30 hover:to-vibrant-purple/30',
+                'from-vibrant-green/20 to-vibrant-blue/20 hover:from-vibrant-green/30 hover:to-vibrant-blue/30',
+                'from-vibrant-orange/20 to-vibrant-pink/20 hover:from-vibrant-orange/30 hover:to-vibrant-pink/30',
+                'from-vibrant-pink/20 to-vibrant-purple/20 hover:from-vibrant-pink/30 hover:to-vibrant-purple/30',
+                'from-vibrant-purple/20 to-vibrant-blue/20 hover:from-vibrant-purple/30 hover:to-vibrant-blue/30',
+                'from-vibrant-green/20 to-vibrant-orange/20 hover:from-vibrant-green/30 hover:to-vibrant-orange/30'
+              ];
+              
+              return (
+                <Card key={utility.id} className={`transition-all duration-300 hover:scale-105 hover:shadow-xl bg-gradient-to-br ${colors[index % colors.length]} border-2 border-white/50`}>
                   <CardHeader>
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-gradient-to-br from-vibrant-blue to-vibrant-purple rounded-lg flex items-center justify-center">
@@ -150,8 +233,9 @@ const Index = () => {
                       </Button>
                     </a>
                   </CardContent>
-                </Card>;
-          })}
+                </Card>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -162,8 +246,14 @@ const Index = () => {
           <h2 className="text-4xl font-bold text-center mb-16 bg-gradient-to-r from-vibrant-pink to-vibrant-purple bg-clip-text text-transparent">Latest Announcements</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {announcements.map((announcement, index) => {
-            const colors = ['from-vibrant-pink/20 to-vibrant-purple/20 hover:from-vibrant-pink/30 hover:to-vibrant-purple/30', 'from-vibrant-orange/20 to-vibrant-pink/20 hover:from-vibrant-orange/30 hover:to-vibrant-pink/30', 'from-vibrant-purple/20 to-vibrant-blue/20 hover:from-vibrant-purple/30 hover:to-vibrant-blue/30'];
-            return <Card key={announcement.id} className={`transition-all duration-300 hover:scale-105 hover:shadow-xl bg-gradient-to-br ${colors[index % colors.length]} border-2 border-white/50`}>
+              const colors = [
+                'from-vibrant-pink/20 to-vibrant-purple/20 hover:from-vibrant-pink/30 hover:to-vibrant-purple/30',
+                'from-vibrant-orange/20 to-vibrant-pink/20 hover:from-vibrant-orange/30 hover:to-vibrant-pink/30',
+                'from-vibrant-purple/20 to-vibrant-blue/20 hover:from-vibrant-purple/30 hover:to-vibrant-blue/30'
+              ];
+              
+              return (
+                <Card key={announcement.id} className={`transition-all duration-300 hover:scale-105 hover:shadow-xl bg-gradient-to-br ${colors[index % colors.length]} border-2 border-white/50`}>
                   <CardHeader>
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-gradient-to-br from-vibrant-pink to-vibrant-purple rounded-lg flex items-center justify-center">
@@ -178,8 +268,9 @@ const Index = () => {
                       {new Date(announcement.created_at).toLocaleDateString()}
                     </p>
                   </CardContent>
-                </Card>;
-          })}
+                </Card>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -211,6 +302,8 @@ const Index = () => {
         <div className="absolute top-20 left-20 w-24 h-24 bg-yellow-400/20 rounded-full blur-xl"></div>
         <div className="absolute bottom-20 right-20 w-32 h-32 bg-pink-400/20 rounded-full blur-xl"></div>
       </section>
-    </div>;
+    </div>
+  );
 };
+
 export default Index;

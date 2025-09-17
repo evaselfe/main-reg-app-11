@@ -13,12 +13,30 @@ interface Category {
   description: string;
   actual_fee: number;
   offer_fee: number;
+  offer_start_date?: string;
+  offer_end_date?: string;
 }
 
 const Categories = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
+
+  const getOfferTimeRemaining = (endDate: string) => {
+    const now = new Date();
+    const end = new Date(endDate);
+    const diffTime = end.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const isOfferActive = (startDate?: string, endDate?: string) => {
+    if (!startDate || !endDate) return true;
+    const now = new Date();
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    return now >= start && now <= end;
+  };
 
   useEffect(() => {
     fetchCategories();
@@ -54,6 +72,10 @@ const Categories = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {categories.map((category, index) => {
             const isJobCard = category.name_english.toLowerCase().includes('job card');
+            const offerActive = isOfferActive(category.offer_start_date, category.offer_end_date);
+            const daysRemaining = category.offer_end_date ? getOfferTimeRemaining(category.offer_end_date) : null;
+            const showOfferCountdown = isJobCard && offerActive && daysRemaining !== null && daysRemaining > 0;
+            
             const colorClasses = [
               'bg-category-blue border-category-blue-foreground text-category-blue-foreground',
               'bg-category-green border-category-green-foreground text-category-green-foreground', 
@@ -84,6 +106,14 @@ const Categories = () => {
                 <CardContent>
                   {category.description && (
                     <p className={`mb-4 ${isJobCard ? 'text-black/90' : 'opacity-90'}`}>{category.description}</p>
+                  )}
+                  
+                  {showOfferCountdown && (
+                    <div className="mb-3 p-2 bg-red-100 rounded-lg border border-red-300">
+                      <p className="text-red-700 font-semibold text-sm text-center">
+                        ⏰ Offer ends in {daysRemaining} day{daysRemaining !== 1 ? 's' : ''}
+                      </p>
+                    </div>
                   )}
                   
                   {(category.actual_fee > 0 || category.offer_fee > 0) && (
