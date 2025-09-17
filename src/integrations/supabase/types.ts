@@ -736,9 +736,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      auto_approve_pennyekart_free: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       generate_customer_id: {
         Args: { mobile: string; name: string }
         Returns: string
+      }
+      process_auto_approvals: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
     }
     Enums: {
